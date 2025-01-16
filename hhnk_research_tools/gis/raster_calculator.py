@@ -59,9 +59,7 @@ class RasterBlocks:
                     if np.isnan(self.raster_paths_dict[key].nodata):
                         self.masks[key] = np.isnan(self.blocks[key])
                     else:
-                        self.masks[key] = (
-                            self.blocks[key] == self.raster_paths_dict[key].nodata
-                        )
+                        self.masks[key] = self.blocks[key] == self.raster_paths_dict[key].nodata
 
                     if np.all(self.masks[key]):
                         # if all values in masks are nodata then we can break loading
@@ -72,9 +70,7 @@ class RasterBlocks:
             if self.yesdata_dict is not None:
                 for key, val in self.yesdata_dict.items():
                     self.blocks[key] = self.read_array_window(key)
-                    self.masks[key] = ~np.isin(
-                        self.blocks[key], [int(i) for i in val]
-                    )  # inverse matches.
+                    self.masks[key] = ~np.isin(self.blocks[key], [int(i) for i in val])  # inverse matches.
 
                     if np.all(self.masks[key]):
                         # if all values in masks are nodata then we can break loading
@@ -90,9 +86,7 @@ class RasterBlocks:
                         if np.isnan(self.raster_paths_dict[key].nodata):
                             self.masks[key] = np.isnan(self.blocks[key])
                         else:
-                            self.masks[key] = (
-                                self.blocks[key] == self.raster_paths_dict[key].nodata
-                            )
+                            self.masks[key] = self.blocks[key] == self.raster_paths_dict[key].nodata
 
         except Exception as e:
             raise e
@@ -173,9 +167,7 @@ class RasterCalculatorV2:
 
         # Local vars
         if tempdir is None:
-            self.tempdir = raster_out.parent.full_path(
-                f"temp_{hrt.current_time(date=True)}"
-            )
+            self.tempdir = raster_out.parent.full_path(f"temp_{hrt.current_time(date=True)}")
         else:
             self.tempdir = tempdir
 
@@ -200,9 +192,7 @@ class RasterCalculatorV2:
         for key, r in self.raster_paths_dict.items():
             if cont:
                 if not isinstance(r, hrt.Raster):
-                    raise TypeError(
-                        f"{key}:{r} in raster_paths_dict is not of type hrt.Raster"
-                    )
+                    raise TypeError(f"{key}:{r} in raster_paths_dict is not of type hrt.Raster")
                 if not r.exists():
                     print(f"Missing input raster key: {key} @ {r}")
                     cont = False
@@ -213,18 +203,14 @@ class RasterCalculatorV2:
         if self.yesdata_dict is not None:
             for key in self.yesdata_dict:
                 if key in self.nodata_keys:
-                    raise ValueError(
-                        f"Key:'{key}' not allowed to be passed to both yesdata_dict and nodata_keys."
-                    )
+                    raise ValueError(f"Key:'{key}' not allowed to be passed to both yesdata_dict and nodata_keys.")
 
         # Check resolution
         if cont:
             vrt_keys = []
             for key, r in self.raster_paths_dict.items():
                 if r.metadata.pixelarea > self.metadata_raster.metadata.pixelarea:
-                    print(
-                        f"Resolution of {key} is not the same as metadataraster {self.metadata_key}, creating vrt"
-                    )
+                    print(f"Resolution of {key} is not the same as metadataraster {self.metadata_key}, creating vrt")
                     self.create_vrt(key)
                     vrt_keys.append(key)
                 if r.metadata.pixelarea < self.metadata_raster.metadata.pixelarea:
@@ -243,34 +229,24 @@ this is not implemented or tested if it works."
                         self.create_vrt(key)
 
                     if self.verbose:
-                        print(
-                            f"{key} does not have same extent as {self.metadata_key}, creating vrt"
-                        )
+                        print(f"{key} does not have same extent as {self.metadata_key}, creating vrt")
 
         # Check if we should create new file
         if cont:
             if self.raster_out is not None:
-                cont = hrt.check_create_new_file(
-                    output_file=self.raster_out, overwrite=overwrite
-                )
+                cont = hrt.check_create_new_file(output_file=self.raster_out, overwrite=overwrite)
                 if cont is False:
                     if self.verbose:
-                        print(
-                            f"output raster already exists: {self.raster_out.name} @ {self.raster_out.path}"
-                        )
+                        print(f"output raster already exists: {self.raster_out.name} @ {self.raster_out.path}")
 
         return cont
 
     def create(self):
         """Create empty output raster with metadata of metadata_raster"""
         if self.verbose:
-            print(
-                f"Creating output raster: {self.raster_out.name} @ {self.raster_out.path}"
-            )
+            print(f"Creating output raster: {self.raster_out.name} @ {self.raster_out.path}")
 
-        self.raster_out.create(
-            metadata=self.metadata_raster.metadata, nodata=self.output_nodata
-        )
+        self.raster_out.create(metadata=self.metadata_raster.metadata, nodata=self.output_nodata)
 
     def create_vrt(self, raster_key: str):
         """Create vrt of input rasters with the extent of the metadata raster
@@ -344,9 +320,7 @@ this is not implemented or tested if it works."
                     # nodata keys has all value as nodata. Output should be nodata as well
                     if block.cont:
                         # Calculate output raster block with custom function.
-                        block_out = self.custom_run_window_function(
-                            block=block, **kwargs
-                        )
+                        block_out = self.custom_run_window_function(block=block, **kwargs)
 
                         band_out.WriteArray(block_out, xoff=window[0], yoff=window[1])
 
@@ -470,9 +444,7 @@ this is not implemented or tested if it works."
                                 window=window_big,
                                 raster_paths_dict=self.raster_paths_same_bounds,
                                 nodata_keys=self.nodata_keys,
-                                yesdata_dict={
-                                    self.metadata_key: [row_label[label_col]]
-                                },
+                                yesdata_dict={self.metadata_key: [row_label[label_col]]},
                                 mask_keys=self.mask_keys,
                             )
 
@@ -480,9 +452,7 @@ this is not implemented or tested if it works."
                             # if certain conditions are met. It is False when a raster in the
                             # nodata keys has all value as nodata. Output should be nodata as well
                             if block.cont:
-                                block_out = self.custom_run_window_function(
-                                    block=block, **kwargs
-                                )
+                                block_out = self.custom_run_window_function(block=block, **kwargs)
 
                                 # Create histogram of unique values of dem and count
                                 val, count = np.unique(block_out, return_counts=True)
@@ -504,7 +474,7 @@ this is not implemented or tested if it works."
 
                         if self.verbose:
                             print(
-                                f"{index+1} / {blocks_total} ({hrt.time_delta(time_start)}s) - {stats_json.name}",
+                                f"{index + 1} / {blocks_total} ({hrt.time_delta(time_start)}s) - {stats_json.name}",
                                 end="\r",
                             )
 

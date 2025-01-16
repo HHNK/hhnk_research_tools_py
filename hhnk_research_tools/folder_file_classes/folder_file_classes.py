@@ -93,7 +93,7 @@ class Folder(BasePath):
             ext = [ext]
         file_list = []
         for e in ext:
-            file_list += [i for i in self.path.glob(f"*.{e.replace('.','')}")]
+            file_list += [i for i in self.path.glob(f"*.{e.replace('.', '')}")]
         return file_list
 
     def full_path(self, name, return_only_file_class=False):
