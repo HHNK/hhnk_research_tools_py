@@ -371,7 +371,11 @@ class Raster(File):
         return vrt_out
 
     def sum_labels(
-        self, label_raster, label_idx: np.array, count_values=False, decimals: Union[int, None] = None
+        self,
+        label_raster,
+        label_idx: np.array,
+        count_values=False,
+        decimals: Union[int, None] = None,
     ) -> dict:
         """Calculate the sum of the rastervalues per label.
         Used in statistiek stedelijk
