@@ -21,11 +21,10 @@ class RasterCalculatorRxrTest(hrt.RasterCalculatorRxr):
         super().__init__(
             raster_out=raster_out,
             raster_paths_dict=raster_paths_dict,
-            nodata_keys=nodata_keys,
             metadata_key=metadata_key,
             tempdir=tempdir,
         )
-
+        self.nodata_keys = nodata_keys
         # Local vars
 
     def run(self, chunksize: Union[int, None] = None, overwrite: bool = False):
