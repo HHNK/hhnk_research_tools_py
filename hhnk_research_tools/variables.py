@@ -1,4 +1,5 @@
 import numpy as np
+import rasterio as rio
 from osgeo import gdal
 
 # default_variables
@@ -82,6 +83,7 @@ DEFAULT_NODATA_VALUES = {
     "float64": np.nan,  # Or np.finfo(np.float64).min
     "bool": False,
 }  # TODO the gdal datatypes to numpy name conversion is found here; rasterio.dtypes.dtype_fwd
+GDAL_DTYPES = rio.dtypes.dtype_fwd  # dict with keys=gdal int, value=str dtype
 
 
 class ThreediInformation:

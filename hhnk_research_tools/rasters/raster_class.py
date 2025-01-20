@@ -514,6 +514,8 @@ class Raster(File):
         if dst_ds is not None:
             gdal.ReprojectImage(src_ds, dst_ds, src_wkt=src.metadata.projection)
 
+        return cls(dst)
+
 
 # %%
 

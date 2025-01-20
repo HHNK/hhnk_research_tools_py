@@ -61,7 +61,7 @@ class Waterschadeschatter:
             self.load_damage_table()
 
     def validate(self):
-        """check if input exists"""
+        """Check if input exists"""
         for r in [self.lu_raster, self.depth_raster]:
             if not r.exists():
                 raise Exception(f"could not find input file in: {r}")
@@ -87,15 +87,15 @@ class Waterschadeschatter:
         verbose=False,
         overwrite=False,
     ):
-        """
-        Calculation type options: 'sum','direct','indirect'
-        """
+        """Calculation type options: 'sum','direct','indirect'"""
 
         if output_raster.exists():
             if overwrite is False:
                 return
             else:
-                output_raster.unlink()
+                output_raster.path.unlink()
+
+        output_raster = hrt.RasterOld(output_raster)  # TODO wss omzetten naar rxr
 
         # Create output raster
         output_raster.create(
