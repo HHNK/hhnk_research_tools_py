@@ -42,7 +42,7 @@ def sql_create_update_case_statement(
 
     """
     if show_proposed and show_prev:
-        raise Exception("sql_create_update_case_statement: " "Only one of show_prev and show_proposed can be True")
+        raise Exception("sql_create_update_case_statement: Only one of show_prev and show_proposed can be True")
     try:
         query = None
         if not show_prev and not show_proposed:
@@ -231,7 +231,7 @@ def sqlite_replace_or_add_table(db, dst_table_name, src_table_name, select_state
         curr = conn.cursor()
         # Check if table exists
         exists = curr.execute(
-            f"SELECT count() from sqlite_master " f"WHERE type='table' and name='{dst_table_name}'"
+            f"SELECT count() from sqlite_master WHERE type='table' and name='{dst_table_name}'"
         ).fetchone()[0]
         if exists == 0:
             # Get the original creation statement from the table we are backing up if the new table doesn't exist
@@ -249,7 +249,7 @@ def sqlite_replace_or_add_table(db, dst_table_name, src_table_name, select_state
             query = ";\n".join(query_list)
         else:
             # If the backup table exists, we replace any rows that are changed since last backup
-            query = f"REPLACE INTO {dst_table_name} " f"SELECT * from {src_table_name}"
+            query = f"REPLACE INTO {dst_table_name} SELECT * from {src_table_name}"
         execute_sql_changes(query=query, conn=conn)
     except Exception as e:
         raise e from None
