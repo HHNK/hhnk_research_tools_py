@@ -8,6 +8,8 @@ in a project, the logging will be set according to these rules.
 import logging
 import sys
 from logging import *  # noqa: F401,F403 # type: ignore
+from pathlib import Path
+from typing import Union
 
 
 def get_logconfig_dict(level_root="WARNING", level_dict=None, log_filepath=None):
@@ -111,6 +113,43 @@ def set_default_logconfig(level_root="WARNING", level_dict=None, log_filepath=No
     logging.config.dictConfig(log_config)
 
 
+def add_file_handler(logger, filepath: Union[str, Path], filemode="a", filelevel: str = ""):
+    """Add a filehandler to the logger. Removes the a filehandler when it is already present
+
+    Parameters
+    ----------
+    filepath : Union[str, Path]
+        filepath to write logs to.
+    filemode : str, default is "a"
+        writemode, 'w' is write, 'a' is append.
+    filelevel : str, default is ""
+        Set a different level for writing than the console logger.
+    """
+
+    # Remove filehandler when already present
+    file_handler = None
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            if Path(handler.stream.name) == filepath:
+                logger.removeHandler(handler)
+                logger.debug("Removed existing FileHandler, logger probably imported multiple times")
+
+    file_handler = logging.FileHandler(str(filepath), mode=filemode)
+
+    # This formatter includes longdate.
+    formatter = logging.Formatter(
+        "%(asctime)s|%(levelname)-8s| %(name)s:%(lineno)-4d| %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    file_handler.setFormatter(formatter)
+
+    # Set level of filehandler, can be different from logger.
+    if filelevel == "":
+        filelevel = logger.level
+    file_handler.setLevel(filelevel)
+
+    logger.addHandler(file_handler)
+
+
 def get_logger(name: str, level=None):
     """
     Name should default to __name__, so the logger is linked to the correct file
@@ -145,4 +184,8 @@ def get_logger(name: str, level=None):
     logger = logging.getLogger(name)
     if level is not None:
         logger.setLevel(level)
+
     return logger
+
+
+# %%
