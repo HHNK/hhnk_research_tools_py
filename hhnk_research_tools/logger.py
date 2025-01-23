@@ -11,6 +11,9 @@ from logging import *  # noqa: F401,F403 # type: ignore
 from pathlib import Path
 from typing import Union
 
+LOGFORMAT = "%(asctime)s|%(levelname)-8s| %(name)s:%(lineno)-4d| %(message)s"  # default logformat
+DATEFMT = "%H:%M:%S"  # default dateformat for console logger
+
 
 def get_logconfig_dict(level_root="WARNING", level_dict=None, log_filepath=None):
     """Make a dict for the logging.
@@ -53,9 +56,9 @@ def get_logconfig_dict(level_root="WARNING", level_dict=None, log_filepath=None)
         },
         "formatters": {
             "time_level_name": {
-                "format": "%(asctime)s|%(levelname)-8s| %(name)s:%(lineno)-4d| %(message)s",
+                "format": LOGFORMAT,
                 # "format": "%(asctime)s|%(levelname)-8s| %(name)s-%(process)d::%(module)s|%(lineno)-4s: %(message)s",
-                "datefmt": "%H:%M:%S",
+                "datefmt": DATEFMT,
             },
             # "error": {"format": "%(asctime)s-%(levelname)s-%(name)s-%(process)d::%(module)s|%(lineno)s:: %(message)s"},
         },
@@ -113,7 +116,13 @@ def set_default_logconfig(level_root="WARNING", level_dict=None, log_filepath=No
     logging.config.dictConfig(log_config)
 
 
-def add_file_handler(logger, filepath: Union[str, Path], filemode="a", filelevel: str = ""):
+def add_file_handler(
+    logger,
+    filepath: Union[str, Path],
+    filemode="a",
+    filelevel: str = "",
+    datefmt="%Y-%m-%d %H:%M:%S",
+):
     """Add a filehandler to the logger. Removes the a filehandler when it is already present
 
     Parameters
@@ -124,6 +133,8 @@ def add_file_handler(logger, filepath: Union[str, Path], filemode="a", filelevel
         writemode, 'w' is write, 'a' is append.
     filelevel : str, default is ""
         Set a different level for writing than the console logger.
+    datefmt : str, default is "%Y-%m-%d %H:%M:%S"
+        Dateformat for the filehandler. Can differ from the console logger.
     """
 
     # Remove filehandler when already present
@@ -138,7 +149,8 @@ def add_file_handler(logger, filepath: Union[str, Path], filemode="a", filelevel
 
     # This formatter includes longdate.
     formatter = logging.Formatter(
-        "%(asctime)s|%(levelname)-8s| %(name)s:%(lineno)-4d| %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        fmt="%(asctime)s|%(levelname)-8s| %(name)s:%(lineno)-4d| %(message)s",
+        datefmt=datefmt,
     )
     file_handler.setFormatter(formatter)
 
@@ -150,7 +162,7 @@ def add_file_handler(logger, filepath: Union[str, Path], filemode="a", filelevel
     logger.addHandler(file_handler)
 
 
-def get_logger(name: str, level=None):
+def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT):
     """
     Name should default to __name__, so the logger is linked to the correct file
 
@@ -171,6 +183,8 @@ def get_logger(name: str, level=None):
     level : str
         Only use this when debugging. Otherwise make the logger inherit the level from the config.
         When None it will use the default from get_logconfig_dict.
+    datefmt : str, default is "%H:%M:%S"
+        Change the default dateformatter to e.g. "%Y-%m-%d %H:%M:%S"
     """
     # Rename long names with shorter ones
     replacements = {
@@ -182,8 +196,19 @@ def get_logger(name: str, level=None):
         name = name.replace(old, new)
 
     logger = logging.getLogger(name)
+
+    # Change log level
     if level is not None:
         logger.setLevel(level)
+
+    # Change log format or datefmt
+    # if (fmt != LOGFORMAT) or (datefmt != DATEFMT):
+    #     print("Yes its different")
+    #     for handler in logger.handlers:
+    #         print(handler)
+    #         if isinstance(handler, logging.StreamHandler):
+    #             print("Streamhandler found")
+    #             # handler.formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
 
     return logger
 
