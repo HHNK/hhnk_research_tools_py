@@ -14,7 +14,8 @@ from pathlib import Path
 from typing import Union
 
 LOGFORMAT = "%(asctime)s|%(levelname)-8s| %(name)s:%(lineno)-4d| %(message)s"  # default logformat
-DATEFMT = "%H:%M:%S"  # default dateformat for console logger
+DATEFMT_STREAM = "%H:%M:%S"  # default dateformat for console logger
+DATEFMT_FILE = "%Y-%m-%d %H:%M:%S"  # default dateformat for file logger
 
 
 def get_logconfig_dict(level_root="WARNING", level_dict=None, log_filepath=None):
@@ -60,7 +61,7 @@ def get_logconfig_dict(level_root="WARNING", level_dict=None, log_filepath=None)
             "time_level_name": {
                 "format": LOGFORMAT,
                 # "format": "%(asctime)s|%(levelname)-8s| %(name)s-%(process)d::%(module)s|%(lineno)-4s: %(message)s",
-                "datefmt": DATEFMT,
+                "datefmt": DATEFMT_STREAM,
             },
             # "error": {"format": "%(asctime)s-%(levelname)s-%(name)s-%(process)d::%(module)s|%(lineno)s:: %(message)s"},
         },
@@ -124,7 +125,7 @@ def add_file_handler(
     filemode="a",
     filelevel: str = "",
     fmt=LOGFORMAT,
-    datefmt="%Y-%m-%d %H:%M:%S",
+    datefmt=DATEFMT_FILE,
     maxBytes=10 * 1024 * 1024,
     backupCount=5,
     rotate=False,
@@ -199,7 +200,7 @@ def _add_or_update_streamhandler_format(logger, fmt, datefmt):
     logger.debug("Added new StreamHandler with formatter")
 
 
-def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT) -> logging.Logger:
+def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT_STREAM) -> logging.Logger:
     """
     Name should default to __name__, so the logger is linked to the correct file
 
@@ -239,7 +240,7 @@ def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT) -> 
         logger.setLevel(level)
 
     # Change log format or datefmt
-    if (fmt != LOGFORMAT) or (datefmt != DATEFMT):
+    if (fmt != LOGFORMAT) or (datefmt != DATEFMT_STREAM):
         # Detach the logger from the root. This is needed because even when logger.handlers
         # is empty, it still inherits them from the root. This would require us to change
         # the root logger to change just a single logger.
