@@ -173,34 +173,44 @@ def add_file_handler(
     logger.addHandler(file_handler)
 
 
-def _add_or_update_streamhandler_format(logger, fmt, datefmt):
+def _add_or_update_streamhandler_format(logger, fmt, datefmt, propagate: bool = True):
     """Add a StreamHandler with the given formatter to the logger.
     If the logger has no handlers, create a new one
+
+    propagate : bool, default is True
+        If True, make formatting changes to the root logger.
+        Otherwise detach the logger from the root and add the handler to
+        that specific logger. If not detached (propagate=False), the logger
+        will still inherit the handlers from the root logger. Resulting in
+        multiple hanlders.
     """
+
+    if propagate:
+        logger = logging.getLogger()
+    else:
+        logger.propagate = False
+
+    handler_updated = False
     # Check if the logger already has a StreamHandler with the correct formatter
     for handler in logger.handlers:
         if isinstance(handler, logging.StreamHandler):
             # Update the formatter if the StreamHandler is found
             handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
             logger.debug("Updated StreamHandler formatter")
-            return
+
+            handler_updated = True
+
+    if handler_updated:
+        return
 
     # If no matching StreamHandler was found, add a new one
-
-    # Detach the logger from the root. This is needed because even when logger.handlers
-    # is empty, it still inherits them from the root. This would require us to change
-    # the root logger to change just a single logger.
-    # logger.propagate = False
-
-    # TODO formatter should be changed on the root streamhandler since we dont propagate.
-
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
     logger.addHandler(stream_handler)
     logger.debug("Added new StreamHandler with formatter")
 
 
-def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT_STREAM) -> logging.Logger:
+def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT_STREAM, propagate=True) -> logging.Logger:
     """
     Name should default to __name__, so the logger is linked to the correct file
 
@@ -241,11 +251,7 @@ def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT_STRE
 
     # Change log format or datefmt
     if (fmt != LOGFORMAT) or (datefmt != DATEFMT_STREAM):
-        # Detach the logger from the root. This is needed because even when logger.handlers
-        # is empty, it still inherits them from the root. This would require us to change
-        # the root logger to change just a single logger.
-        # logger.propagate = False
-        _add_or_update_streamhandler_format(logger, fmt, datefmt)
+        _add_or_update_streamhandler_format(logger, fmt=fmt, datefmt=datefmt, propagate=propagate)
 
     return logger
 
