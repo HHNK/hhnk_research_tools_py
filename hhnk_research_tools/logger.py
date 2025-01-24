@@ -7,7 +7,9 @@ in a project, the logging will be set according to these rules.
 
 import logging
 import sys
-from logging import *  # noqa: F401,F403 # type: ignore
+
+# from logging import *  # noqa: F401,F403 # type: ignore
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Union
 
@@ -73,8 +75,8 @@ def get_logconfig_dict(level_root="WARNING", level_dict=None, log_filepath=None)
             for pkg in level_list:
                 logconfig_dict["loggers"][pkg] = {
                     "level": loglevel,
-                    "propagate": False,
-                    "handlers": ["debug_console_handler"],
+                    # "propagate": False, # This will stop the logger from propagating to the root logger
+                    # "handlers": ["debug_console_handler"], # When propagate is False, this is needed
                 }
 
     if log_filepath:
@@ -121,7 +123,12 @@ def add_file_handler(
     filepath: Union[str, Path],
     filemode="a",
     filelevel: str = "",
+    fmt=LOGFORMAT,
     datefmt="%Y-%m-%d %H:%M:%S",
+    maxBytes=10 * 1024 * 1024,
+    backupCount=5,
+    rotate=False,
+    logfilter=None,
 ):
     """Add a filehandler to the logger. Removes the a filehandler when it is already present
 
@@ -138,20 +145,19 @@ def add_file_handler(
     """
 
     # Remove filehandler when already present
-    file_handler = None
     for handler in logger.handlers:
-        if isinstance(handler, logging.FileHandler):
+        if isinstance(handler, (logging.FileHandler, RotatingFileHandler)):
             if Path(handler.stream.name) == filepath:
                 logger.removeHandler(handler)
                 logger.debug("Removed existing FileHandler, logger probably imported multiple times")
 
-    file_handler = logging.FileHandler(str(filepath), mode=filemode)
+    if rotate:
+        file_handler = logging.FileHandler(str(filepath), mode=filemode)
+    else:
+        file_handler = RotatingFileHandler(str(filepath), mode=filemode, maxBytes=maxBytes, backupCount=backupCount)
 
     # This formatter includes longdate.
-    formatter = logging.Formatter(
-        fmt="%(asctime)s|%(levelname)-8s| %(name)s:%(lineno)-4d| %(message)s",
-        datefmt=datefmt,
-    )
+    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
     file_handler.setFormatter(formatter)
 
     # Set level of filehandler, can be different from logger.
@@ -159,20 +165,23 @@ def add_file_handler(
         filelevel = logger.level
     file_handler.setLevel(filelevel)
 
+    if logfilter:
+        file_handler.addFilter(logfilter)
+        logger.debug("Added filter to FileHandler")
+
     logger.addHandler(file_handler)
 
 
 def _add_or_update_streamhandler_format(logger, fmt, datefmt):
     """Add a StreamHandler with the given formatter to the logger.
-    If the logger has no handlers, it inherits its handler from the root.
-
+    If the logger has no handlers, create a new one
     """
     # Check if the logger already has a StreamHandler with the correct formatter
     for handler in logger.handlers:
         if isinstance(handler, logging.StreamHandler):
             # Update the formatter if the StreamHandler is found
             handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
-            logger.info("Updated StreamHandler formatter.")
+            logger.debug("Updated StreamHandler formatter")
             return
 
     # If no matching StreamHandler was found, add a new one
@@ -180,17 +189,17 @@ def _add_or_update_streamhandler_format(logger, fmt, datefmt):
     # Detach the logger from the root. This is needed because even when logger.handlers
     # is empty, it still inherits them from the root. This would require us to change
     # the root logger to change just a single logger.
-    logger.propagate = False
+    # logger.propagate = False
 
-    # TODO copy the streamhandlers from the root. and change the formatting
+    # TODO formatter should be changed on the root streamhandler since we dont propagate.
 
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
     logger.addHandler(stream_handler)
-    logger.info("Added new StreamHandler with formatter.")
+    logger.debug("Added new StreamHandler with formatter")
 
 
-def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT):
+def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT) -> logging.Logger:
     """
     Name should default to __name__, so the logger is linked to the correct file
 
@@ -234,7 +243,7 @@ def get_logger(name: str, level=None, fmt=LOGFORMAT, datefmt: str = DATEFMT):
         # Detach the logger from the root. This is needed because even when logger.handlers
         # is empty, it still inherits them from the root. This would require us to change
         # the root logger to change just a single logger.
-        logger.propagate = False
+        # logger.propagate = False
         _add_or_update_streamhandler_format(logger, fmt, datefmt)
 
     return logger
