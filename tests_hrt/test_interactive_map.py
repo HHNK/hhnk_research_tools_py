@@ -22,13 +22,13 @@ quantiles = [0, 0.5, 0.8, 1]
 v = create_interactive_map(
     gdf=gdf,
     datacolumn=datacolumn,
-    colormap_name=colormap_name,
     output_path=output_path,
     title=title,
     legend_label=legend_label,
-    quantiles=quantiles,
     tooltip_columns=tooltip_columns,
     tooltip_aliases=tooltip_aliases,
+    colormap_name=colormap_name,
+    quantiles=quantiles,
 )
 
 

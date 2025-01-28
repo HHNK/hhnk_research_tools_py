@@ -21,51 +21,47 @@ logger = logging.get_logger(__name__, level="DEBUG")
 def create_interactive_map(
     gdf,
     datacolumn: str,
-    colormap_name: str = "plasma",
-    colormap_steps: int = None,
     output_path: Union[Path, str, None] = None,
     title: str = "Title",
     legend_label: str = "Label",
-    quantiles: list = None,
     tooltip_columns: list[str] = None,
     tooltip_aliases: list[str] = None,
-    show: bool = True,
+    colormap_name: str = "plasma",
+    colormap_steps: int = None,
+    quantiles: list = None,
 ):
     """Create basic interactive map based on one numeric column in a geodataframe.
 
     See https://python-visualization.github.io/folium/latest/advanced_guide/colormaps.html for more options
 
     Parameters
-    ----
-
+    ----------
     gdf : pandas GeoDataFrame
         pandas GeoDataFrame containing polygon geometry and data column <column_name>
     datacolumn : str
         Name of the column containing data for visualization
-    colormap_name : str
-        Name of the colormap
-        Use 'cm.linear' to see available colormaps
-    colormap_steps : int
-        Number of steps to split the colormap, not sure this works over 5 steps
-        If None colormap is linear
     output_path : str,
         Output location including map name and extension '.html'
     title : str,
         Map title
     legend_label : str,
         Legend label
-    quantiles : list
-        Specify quantiles for non-linear colormap, i.e. [0, 0.5, 0.8, 1] or expelling
-        outliers i.e. [0.05, 0.5, 0.8, 0.95]
     tooltip_columns : list[str]
         List of column names to appear in tooltip
     tooltip_aliases : list[str]
         List of column aliases to be used in tooltip
-    show : bool = True
-        Return figure as output of function
+    colormap_name : str
+        Name of the colormap
+        Use 'cm.linear' to see available colormaps
+    colormap_steps : int
+        Number of steps to split the colormap, not sure this works over 5 steps
+        If None colormap is linear
+    quantiles : list
+        Specify quantiles for non-linear colormap, i.e. [0, 0.5, 0.8, 1] or expelling
+        outliers i.e. [0.05, 0.5, 0.8, 0.95]
 
     Remarks
-    ----
+    -------
     * Removes geometries when data column equals nan
     * Rounds values in datacolumn to 2 decimals in tooltip
 
@@ -154,5 +150,4 @@ def create_interactive_map(
         logger.debug(f"Saving interactive map to: {output_path}")
         m.save(output_path)
 
-    if show:
-        return m
+    return m
