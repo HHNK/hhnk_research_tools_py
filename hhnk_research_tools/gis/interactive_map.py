@@ -7,8 +7,15 @@ Date: 24 - 01 - 2025
 """
 
 # %%
+from pathlib import Path
+from typing import Union
+
 import branca.colormap as cm
 import folium
+
+import hhnk_research_tools.logger as logging
+
+logger = logging.get_logger(__name__, level="DEBUG")
 
 
 def create_interactive_map(
@@ -16,7 +23,7 @@ def create_interactive_map(
     datacolumn: str,
     colormap_name: str = "plasma",
     colormap_steps: int = None,
-    output_path: str = None,
+    output_path: Union[Path, str, None] = None,
     title: str = "Title",
     legend_label: str = "Label",
     quantiles: list = None,
@@ -105,10 +112,15 @@ def create_interactive_map(
 
     # Create the map
     # background maps at: https://leaflet-extras.github.io/leaflet-providers/preview/
-    m = folium.Map(location=[52.8, 4.9], tiles="nlmaps.luchtfoto", zoom_start=10)
+    m = folium.Map(
+        location=[52.8, 4.9],
+        tiles="nlmaps.luchtfoto",
+        zoom_start=10,
+        attr="<a href=https://nlmaps.nl/>NL Maps luchtfoto</a>",
+    )
 
     # Add the water layer
-    folium.TileLayer("nlmaps.water").add_to(m)
+    folium.TileLayer("nlmaps.water", attr="<a href=https://nlmaps.nl/>NL Maps water</a>").add_to(m)
 
     # Add the GeoJson layer Gemeente
     folium.GeoJson(
@@ -137,39 +149,10 @@ def create_interactive_map(
     title_html = f'<h1 style="position:absolute;z-index:100000;bottom:1vw;background-color:rgba(255, 255, 255, 0.8);padding:10px;border-radius:5px;" >{title}</h1>'
     m.get_root().html.add_child(folium.Element(title_html))
 
-    if isinstance(output_path, str):
+    if output_path is not None:
         # Save the map
+        logger.debug(f"Saving interactive map to: {output_path}")
         m.save(output_path)
 
     if show:
         return m
-
-
-# %% Code test
-import geopandas as gpd
-
-gdf = gpd.read_file(
-    r"\\srv57d1\geo_info\02_Werkplaatsen\06_HYD\Projecten\HKC24001 Verantwoord investeren in stedelijk gebied\data_actueel\02_output\gemeente_statistiek.gpkg"
-)
-datacolumn = "dem_mean"
-colormap_name = "viridis"
-output_path = None
-title = "Maaiveldhoogte"
-legend_label = "Hoogte [m NAP]"
-tooltip_columns = ["gemeentenaam", "dem_mean"]
-tooltip_aliases = ["Gemeente", "Hoogte"]
-
-v = create_interactive_map(
-    gdf=gdf,
-    datacolumn=datacolumn,
-    colormap_name=colormap_name,
-    output_path=output_path,
-    title=title,
-    legend_label=legend_label,
-    quantiles=[0, 0.5, 0.8, 1],
-    tooltip_columns=tooltip_columns,
-    tooltip_aliases=tooltip_aliases,
-)
-
-# %%
-v
