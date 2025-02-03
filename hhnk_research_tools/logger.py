@@ -152,9 +152,11 @@ def add_file_handler(
                 logger.removeHandler(handler)
                 logger.debug("Removed existing FileHandler, logger probably imported multiple times")
 
-    if rotate:
+    # TODO  add test that filemode is doing the correct thing
+    if not rotate:
         file_handler = logging.FileHandler(str(filepath), mode=filemode)
     else:
+        # TODO filemode 'w' doesnt seem to reset file on RotatingFileHandler
         file_handler = RotatingFileHandler(str(filepath), mode=filemode, maxBytes=maxBytes, backupCount=backupCount)
 
     # This formatter includes longdate.
